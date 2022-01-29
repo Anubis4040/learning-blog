@@ -20,8 +20,6 @@ class CreatePostsTable extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->unsignedBigInteger('file_id');
-            $table->foreign('file_id')->references('id')->on('files');
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')->references('id')->on('categories');
         });

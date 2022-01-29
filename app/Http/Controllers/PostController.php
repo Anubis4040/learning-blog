@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreCategoryRequest;
-use App\Models\Category;
+use App\Models\File;
+use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class CategoryController extends Controller
+class PostController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,7 +17,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return response()->json(Category::all());
+        $posts = Post::with('file')->get();
+
+        return response()->json($posts);
     }
 
     /**
@@ -37,17 +40,30 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
-            'title' => 'required|alpha_num|max:50',
+            'title' => 'required|string',
+            'content' => 'required|string|max:255',
+            'user_id' => 'required',
+            'category_id' => 'required',
+            'image' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(),422);
         }
 
-        $category = Category::create($validator->validated());
+        $post = Post::create($validator->validated());
 
-        return response()->json($category);
+        $file = $request->file('image');
+
+        $path = Storage::disk('public')->put('', $file);
+
+        $post->file()->create([
+            "path" => $path
+        ]);
+
+        return response()->json($post);
     }
 
     /**
@@ -58,13 +74,13 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        $category = Category::find($id);
+        $post = Post::find($id);
 
-        if(!$category){
-            return response("Category not found");
+        if(!$post){
+            return response("Post not found");
         }
 
-        return response()->json($category);        
+        return response()->json($post); 
     }
 
     /**
@@ -87,28 +103,32 @@ class CategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-
+        // dd($id);
         dd($request->all());
 
         $validator = Validator::make($request->all(), [
-            'title' => 'required|alpha_num|max:50',
+            'title' => 'required|string',
+            'content' => 'required|string|max:255',
+            'user_id' => 'required',
+            'category_id' => 'required',
+            'image' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(),422);
         }
-        
-        $category = Category::find($id);
 
-        if(!$category){
-            return response("Category not found");
-        }
+        $post = Post::create($validator->validated());
 
-        $category->update($validator->validated());
+        $file = $request->file('image');
 
-        $category->save();
+        $path = Storage::disk('public')->put('', $file);
 
-        return response()->json($category);
+        $post->file()->create([
+            "path" => $path
+        ]);
+
+        return response()->json($post);
     }
 
     /**
@@ -119,17 +139,16 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        $category = Category::find($id);
+        $post = Post::find($id);
 
-        if(!$category){
-            return response("Category not found");
+        if(!$post){
+            return response("Post not found");
         }
 
-        if ($category->delete()) {
-            return response()->json($category);
+        if ($post->delete()) {
+            return response()->json($post);
         } else {
             return response("Failed deletion",500);
         }
-        
     }
 }
