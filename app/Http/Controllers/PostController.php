@@ -103,30 +103,40 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // dd($id);
-        dd($request->all());
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'content' => 'required|string|max:255',
             'user_id' => 'required',
             'category_id' => 'required',
-            'image' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(),422);
         }
 
-        $post = Post::create($validator->validated());
+        $post = Post::find($id);
 
-        $file = $request->file('image');
+        if(!$post){
+            return response("Post not found");
+        }
 
-        $path = Storage::disk('public')->put('', $file);
+        $post->update($validator->validated());
 
-        $post->file()->create([
-            "path" => $path
-        ]);
+        $post->save();
+
+        if($file = $request->file('image')){
+
+            Storage::disk('public')->delete($post->file->path);
+            $post->file->delete();
+
+            $path = Storage::disk('public')->put('', $file);
+
+            $post->file()->create([
+                "path" => $path
+            ]);
+
+        }
 
         return response()->json($post);
     }
@@ -140,12 +150,17 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::find($id);
+        $file = $post->file;
 
         if(!$post){
             return response("Post not found");
         }
 
         if ($post->delete()) {
+
+            Storage::disk('public')->delete($file->path);
+            $file->delete();
+
             return response()->json($post);
         } else {
             return response("Failed deletion",500);
