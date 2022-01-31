@@ -43,7 +43,7 @@ class PostController extends Controller
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
-            'content' => 'required|string|max:255',
+            'content' => 'required|string',
             'user_id' => 'required',
             'category_id' => 'required',
             'image' => 'required',
@@ -74,7 +74,7 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::find($id);
+        $post = Post::with('file','author','category')->find($id);
 
         if(!$post){
             return response("Post not found");

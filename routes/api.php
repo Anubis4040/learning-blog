@@ -31,6 +31,8 @@ Route::Post('authenticate',[UserController::class,'authenticate']);
 Route::Get('me',[UserController::class,'me']);
 
 // Posts routes
+Route::Get('posts/public',[PostController::class,'index'])->name('list.post');
+Route::Get('posts/{id}',[PostController::class,'show'])->name('get.post');
 Route::Post('posts/{id}',[PostController::class,'update']);
 
 // Authentication Protected Routes
@@ -41,5 +43,6 @@ Route::middleware('auth:sanctum')->group(function () {
         'posts' => PostController::class,
     ]);
 });
+
 
 
